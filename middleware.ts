@@ -10,7 +10,17 @@ type RedirectEntry = {
 }
  
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+  const pathname = request.nextUrl.pathname;
+
+  const url = new URL('/cms'+pathname, request.nextUrl.origin);
+  const pageResponse = await fetch(url);
+  if (pageResponse.ok) {
+    const page = await pageResponse.json();
+    if (page) {
+      return NextResponse.rewrite(new URL('/cms_support/page_object?url='+encodeURIComponent(pathname), request.url));
+    }
+  }
+
   let redirectData: RedirectEntry[];
   try {
     redirectData = await import('./public/cms/jshcms_redirects.json');
@@ -43,7 +53,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - cms (prevent recursion)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|cms).*)',
   ],
 }
