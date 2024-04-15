@@ -11,6 +11,9 @@ const nextConfig = {
         hostname: 'avatar.vercel.sh'
       }
     ]
+  },
+  env: {
+    CMS_URL: process.env.CMS_URL,
   }
 };
 

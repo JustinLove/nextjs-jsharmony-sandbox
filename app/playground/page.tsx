@@ -2,6 +2,9 @@
 
 import { Card, Metric, Text, Title, BarList, Flex, Grid } from '@tremor/react';
 import Chart from './chart';
+import { getStandalone, getDummyPage, cmsEditor } from '../cms_page';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const website = [
   { name: '/home', value: 1230 },
@@ -45,8 +48,22 @@ const data = [
 ];
 
 export default function PlaygroundPage() {
+  const searchParamsObject = useSearchParams();
+  const searchParams = {
+    "jshcms_token": searchParamsObject.get('jshcms_token') || undefined,
+  };
+  const pathname = usePathname();
+  const [cmsPage, setCmsPage] = useState(getDummyPage());
+
+  async function getcms() {
+    const page = await getStandalone(pathname + '/index.html', searchParams);
+    setCmsPage(page);
+  }
+  useEffect(function() { getcms(); }, [pathname, useSearchParams]);
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
+      {cmsEditor(cmsPage)}
+      <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
       <Grid numItemsSm={2} numItemsLg={3} className="gap-6">
         {data.map((item) => (
           <Card key={item.category}>
@@ -74,6 +91,7 @@ export default function PlaygroundPage() {
         ))}
       </Grid>
       <Chart />
+      <div cms-content-editor="page.content.footer" dangerouslySetInnerHTML={{ __html: cmsPage.content.footer || ''}}></div>
     </main>
   );
 }

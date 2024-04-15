@@ -50,7 +50,7 @@ type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
-async function getDummyPage() {
+export function getDummyPage(): Page {
   return {
     seo: {
       title: 'head title',
@@ -59,14 +59,15 @@ async function getDummyPage() {
       canonical_url: 'http://localhost:3000/cms_support',
     },
     css: 'body {color: red;}',
-    js: 'console.log("hi")',
-    header: null,//'<meta foo="bar">',
+    js: 'console.log("dummey default page")',
+    header: '',//'<meta foo="bar">',
     footer: '<strong>Footer</strong>',
     title: 'title',
     content: {
       body: '<strong>body</strong>',
     },
     properties: {},
+    page_template_id: '',
     isInEditor: false,
     editorScript: '',
   };
@@ -132,7 +133,7 @@ export function getEditorScript() {
   return <Script src={encodeURI(cms_server_url + '/js/jsHarmonyCMS.js')}></Script>
 }
 
-export async function getStandalone(pathname: string, searchParams: { jshcms_token: string }) {
+export async function getStandalone(pathname: string, searchParams: { jshcms_token: string | undefined }) {
   let cmsPage = await getPage(pathname);
   if (searchParams && searchParams.jshcms_token) {
     cmsPage.editorScript = getEditorScript();
