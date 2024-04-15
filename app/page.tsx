@@ -25,7 +25,7 @@ export default async function IndexPage({
   const result = await conn.query(query, ['%' + search + '%']);
   const users = result.rows as User[];
 
-
+  return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
       {cmsEditor(cmsPage)}
       <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
