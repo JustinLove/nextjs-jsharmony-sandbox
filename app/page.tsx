@@ -2,7 +2,7 @@ import conn from './db';
 import { Card, Title, Text } from '@tremor/react';
 import Search from './search';
 import UsersTable from './table';
-import { getStandalone, cmsEditor } from './cms_page';
+import { getStandalone, cmsEditor } from './lib/cms_page';
 
 interface User {
   id: number;
