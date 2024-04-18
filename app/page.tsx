@@ -30,7 +30,7 @@ export default async function IndexPage({
       {cmsEditor(cmsPage)}
       <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
       <Title cms-title="true">{cmsPage.title}</Title>
-      <Text><div cms-content-editor="page.content.description" dangerouslySetInnerHTML={{ __html: cmsPage.content.description || 'A list of users retrieved from a Postgres database.'}}></div></Text>
+      <div cms-content-editor="page.content.description" dangerouslySetInnerHTML={{ __html: cmsPage.content.description || 'A list of users retrieved from a Postgres database.'}}></div>
       <Search />
       <Card className="mt-6">
         <UsersTable users={users} />
