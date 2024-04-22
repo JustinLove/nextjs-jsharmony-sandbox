@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { router } from './app/lib/cms_router'
+import { router, jsHarmonyCmsRouter } from './app/lib/cms_router'
 
 export async function middleware(request: NextRequest) {
+
+  var cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
+    content_path: '/cms',
+    redirect_listing_path: '/cms/jshcms_redirects.json',
+  });
+
+  console.log(await cms.getRedirectData(request.nextUrl.origin));
+
   const response = await router(request);
   if (response) return response;
 
