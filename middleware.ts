@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { router, jsHarmonyCmsRouter } from './app/lib/cms_router'
+import {routePages, jsHarmonyCmsRouter } from './app/lib/cms_router'
 
 export async function middleware(request: NextRequest) {
 
@@ -9,10 +9,11 @@ export async function middleware(request: NextRequest) {
     redirect_listing_path: '/cms/jshcms_redirects.json',
   });
 
-  console.log(await cms.getRedirectData(request.nextUrl.origin));
+  const pageResponse = await routePages(request);
+  if (pageResponse) return pageResponse;
 
-  const response = await router(request);
-  if (response) return response;
+  const redirectResponse = cms.routeRedirects(request);
+  if (redirectResponse) return redirectResponse;
 
   return NextResponse.next();
 }

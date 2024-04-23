@@ -76,21 +76,27 @@ export async function hasPageObject(request: NextRequest, content_path : string)
   return !!pageResponse.ok;
 }
 
-export async function routeRedirects(request: NextRequest, redirect_listing_path : string) {
+export async function getRedirect(request: NextRequest, redirect_listing_path : string) : Promise<RedirectObject | undefined> {
   const pathname = request.nextUrl.pathname;
 
   let redirectData: RedirectEntry[] = await loadRedirectData(redirect_listing_path, request.nextUrl.origin);
 
   if (redirectData && redirectData.length > 0) {
-    const redirectObject = matchRedirect(redirectData, pathname);
-    if (redirectObject) {
-      switch(redirectObject.http_code) {
-        case '301': return NextResponse.redirect(new URL(redirectObject.url, request.url), 301);
-        case '302': return NextResponse.redirect(new URL(redirectObject.url, request.url), 302);
-        case 'PASSTHRU': return NextResponse.rewrite(new URL(redirectObject.url, request.url));
-      }
-    }
+    return matchRedirect(redirectData, pathname);
   }
+}
+
+export function defaultRedirects(redirectObject : RedirectObject, requestUrl : string | URL | undefined) : NextResponse | undefined {
+  switch(redirectObject.http_code) {
+    case '301': return NextResponse.redirect(new URL(redirectObject.url, requestUrl), 301);
+    case '302': return NextResponse.redirect(new URL(redirectObject.url, requestUrl), 302);
+    case 'PASSTHRU': return NextResponse.rewrite(new URL(redirectObject.url, requestUrl));
+  }
+}
+
+export async function routeRedirects(request: NextRequest, redirect_listing_path : string) {
+  const redirectObject = await getRedirect(request, redirect_listing_path);
+  if (redirectObject) return defaultRedirects(redirectObject, request.url);
 }
 
 export async function loadRedirectData(redirect_listing_path : string, origin : string) : Promise<RedirectEntry[]> {
@@ -124,7 +130,9 @@ export interface jsHarmonyCmsRouter {
   default_document: string,
   getRedirectListingPath(): string | undefined,
   getRedirectData(origin : string): Promise<RedirectEntry[]>,
-}
+  getRedirect(request: NextRequest) : Promise<RedirectObject | undefined>,
+  routeRedirects(request: NextRequest) : Promise<NextResponse | undefined>,
+  }
 
 export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyConfig) : jsHarmonyCmsRouter {
   var _this = this;
@@ -156,7 +164,7 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
     if(!redirect_listing_path) return;
     if(redirect_listing_path.charAt(0) !== '/'){
       if (_this.content_path.endsWith('/')) return _this.content_path + redirect_listing_path;
-      else return  _this.content_path + '/' + redirect_listing_path;
+      else return _this.content_path + '/' + redirect_listing_path;
     }
     return redirect_listing_path;
   }
@@ -167,6 +175,17 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
     var redirect_listing_path = _this.getRedirectListingPath();
     if(!redirect_listing_path) return [];
     return await loadRedirectData(redirect_listing_path, origin);
+  }
+
+  this.getRedirect = async function(request: NextRequest) : Promise<RedirectObject | undefined> {
+    var redirect_listing_path = _this.getRedirectListingPath();
+    if(!redirect_listing_path) return;
+    return await getRedirect(request, redirect_listing_path);
+  }
+
+  this.routeRedirects = async function(request: NextRequest) : Promise<NextResponse | undefined> {
+    const redirect = await this.getRedirect(request);
+    if (redirect) return defaultRedirects(redirect, request.url); 
   }
 
   return this;
