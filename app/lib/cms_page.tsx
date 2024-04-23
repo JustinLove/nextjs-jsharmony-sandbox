@@ -85,7 +85,7 @@ export async function getPage(pathname : string | string[] | undefined) {
   return getDummyPage();
 }
 
-export async function generateMetadata(
+export async function generateBasicMetadata(
   { params, searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
