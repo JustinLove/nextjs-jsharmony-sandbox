@@ -13,7 +13,9 @@ const nextConfig = {
     ]
   },
   env: {
-    CMS_URL: process.env.CMS_URL,
+    CMS_CONTENT_PATH: process.env.CMS_CONTENT_PATH,
+    CMS_CONTENT_URL: process.env.CMS_CONTENT_URL,
+    CMS_SERVER_URL: process.env.CMS_SERVER_URL,
   }
 };
 

@@ -56,7 +56,7 @@ export default function PlaygroundPage() {
   const [cmsPage, setCmsPage] = useState(getDummyPage());
 
   async function getcms() {
-    const page = await getStandalone(pathname + '/index.html', searchParams);
+    const page = await getStandalone(pathname + '/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams);
     setCmsPage(page);
   }
   useEffect(function() { getcms(); }, [pathname, useSearchParams]);

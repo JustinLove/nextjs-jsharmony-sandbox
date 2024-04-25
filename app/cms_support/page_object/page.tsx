@@ -16,7 +16,7 @@ export default async function TemplatePage({
     else return notFound();
   }
   const cmsParams = { jshcms_token: (searchParams.jshcms_token || '').toString() };
-  const cmsPage = await getStandalone(url, cmsParams);
+  const cmsPage = await getStandalone(url, process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, cmsParams);
 
   return (
     <>

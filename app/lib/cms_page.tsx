@@ -53,18 +53,18 @@ type Props = {
 export function getDummyPage(): Page {
   return {
     seo: {
-      title: 'head title',
-      keywords: 'keywords,bro',
-      metadesc: 'metadesc',
-      canonical_url: 'http://localhost:3000/cms_support',
+      title: '',
+      keywords: '',
+      metadesc: '',
+      canonical_url: '',
     },
-    css: 'body {color: red;}',
-    js: 'console.log("dummey default page")',
-    header: '',//'<meta foo="bar">',
-    footer: '<strong>Footer</strong>',
-    title: 'title',
+    css: '',
+    js: '',
+    header: '',
+    footer: '',
+    title: '',
     content: {
-      body: '<strong>body</strong>',
+      body: '',
     },
     properties: {},
     page_template_id: '',
@@ -73,9 +73,9 @@ export function getDummyPage(): Page {
   };
 }
 
-export async function getPage(pathname : string | string[] | undefined) {
+export async function getPage(pathname : string | string[] | undefined, content_path : string, content_url : string | undefined) {
   if (typeof(pathname) !== 'string') return getDummyPage();
-  const url = new URL('/cms'+pathname, process.env.CMS_URL);
+  const url = new URL(content_path+pathname, content_url);
   const pageResponse = await fetch(url); // next fetch is cached, so this can be shared between metadata and content
   if (pageResponse.ok) {
     const page = await pageResponse.json();
@@ -89,7 +89,7 @@ export async function generateBasicMetadata(
   { params, searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const cmsPage = await getPage(searchParams.url);
+  const cmsPage = await getPage(searchParams.url,  process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URl);
   let pageMeta : Metadata = {};
   if (cmsPage.seo.title) pageMeta.title = cmsPage.seo.title;
   if (cmsPage.seo.keywords) pageMeta.keywords = cmsPage.seo.keywords;
@@ -133,8 +133,8 @@ export function getEditorScript() {
   return <Script src={encodeURI(cms_server_url + '/js/jsHarmonyCMS.js')}></Script>
 }
 
-export async function getStandalone(pathname: string, searchParams: { jshcms_token: string | undefined }) {
-  let cmsPage = await getPage(pathname);
+export async function getStandalone(pathname: string, content_path : string, content_url : string | undefined, searchParams: { jshcms_token: string | undefined}) {
+  let cmsPage = await getPage(pathname, content_path, content_url);
   if (searchParams && searchParams.jshcms_token) {
     cmsPage.editorScript = getEditorScript();
   }

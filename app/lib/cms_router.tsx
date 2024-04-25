@@ -60,14 +60,6 @@ type RedirectObject = {
   url: string,
 }
 
-export async function routePages(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  if (await hasPageObject(request, '/cms')) {
-    return NextResponse.rewrite(new URL('/cms_support/page_object?url='+encodeURIComponent(pathname), request.url));
-  }
-}
-
 export async function hasPageObject(request: NextRequest, content_path : string) {
   const pathname = request.nextUrl.pathname;
 
@@ -110,14 +102,6 @@ export async function loadRedirectData(redirect_listing_path : string, origin : 
   return [];
 }
 
-export async function router(request: NextRequest) {
-  const pageResponse = await routePages(request);
-  if (pageResponse) return pageResponse;
-
-  const redirectResponse = await routeRedirects(request, '/cms/jshcms_redirects.json');
-  if (redirectResponse) return redirectResponse;
-}
-
 export interface jsHarmonyConfig {
   content_path?: string,
   redirect_listing_path?: string | null,
@@ -132,6 +116,7 @@ export interface jsHarmonyCmsRouter {
   getRedirectData(origin : string): Promise<RedirectEntry[]>,
   getRedirect(request: NextRequest) : Promise<RedirectObject | undefined>,
   routeRedirects(request: NextRequest) : Promise<NextResponse | undefined>,
+  hasPageObject(request: NextRequest) : Promise<boolean>,
   }
 
 export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyConfig) : jsHarmonyCmsRouter {
@@ -186,6 +171,10 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   this.routeRedirects = async function(request: NextRequest) : Promise<NextResponse | undefined> {
     const redirect = await this.getRedirect(request);
     if (redirect) return defaultRedirects(redirect, request.url); 
+  }
+
+  this.hasPageObject = async function(request: NextRequest) {
+    return await hasPageObject(request, this.content_path);
   }
 
   return this;

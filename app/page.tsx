@@ -16,7 +16,7 @@ export default async function IndexPage({
 }: {
   searchParams: { q: string, jshcms_token: string };
 }) {
-  const cmsPage = await getStandalone('/index.html', searchParams);
+  const cmsPage = await getStandalone('/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams);
   const search = searchParams.q ?? '';
   const query = `
     SELECT id, name, username, email 
