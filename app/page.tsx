@@ -14,9 +14,10 @@ interface User {
 export default async function IndexPage({
   searchParams
 }: {
-  searchParams: { q: string, jshcms_token: string };
+  searchParams: { q: string, jshcms_token: string, jshcms_url: string };
 }) {
-  const cmsPage = await getStandalone('/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams);
+  const cms_server_urls = [process.env.CMS_SERVER_URL||''];
+  const cmsPage = await getStandalone('/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams, cms_server_urls);
   const search = searchParams.q ?? '';
   const query = `
     SELECT id, name, username, email 

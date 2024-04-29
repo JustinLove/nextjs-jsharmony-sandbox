@@ -128,15 +128,52 @@ export function cmsEditor(cmsPage : Page) {
   }
 }
 
-export function getEditorScript() {
-  const cms_server_url = 'https://localhost:8081';
-  return <Script src={encodeURI(cms_server_url + '/js/jsHarmonyCMS.js')}></Script>
+export function getEditorScript(cms_server_url : string, cms_server_urls : string[]) {
+  //Validate URL
+  var foundMatch = false;
+  var curUrl = new URL(cms_server_url);
+  for(var i=0;i<cms_server_urls.length;i++){
+    var testUrl = (cms_server_urls[i]||'').toString();
+    if(!testUrl) continue;
+    if(testUrl=='*'){ foundMatch = true; break; }
+    try{
+      var parsedUrl = new URL(testUrl);
+      var strEqual = function(a : string | undefined,b : string | undefined){ return (a||'').toString().toLowerCase() == (b||'').toString().toLowerCase(); }
+      var strPortEqual = function(a : string | undefined,b : string | undefined,protocolA : string,protocolB : string){
+        if(!a && (protocolA=='https:')) a = '443';
+        if(!b && (protocolB=='https:')) b = '443';
+        if(!a && (protocolA=='http:')) a = '80';
+        if(!b && (protocolB=='http:')) b = '80';
+        return strEqual(a,b);
+      }
+      if(parsedUrl.protocol && !strEqual(curUrl.protocol, parsedUrl.protocol)) continue;
+      if(!strEqual(curUrl.hostname, parsedUrl.hostname)) continue;
+      if(!strPortEqual(curUrl.port, parsedUrl.port, curUrl.protocol, parsedUrl.protocol||curUrl.protocol)) continue;
+      var parsedPath = parsedUrl.pathname || '/';
+      var curPath = curUrl.pathname || '/';
+      if(curPath.indexOf(parsedPath)===0){ foundMatch = true; break; }
+    }
+    catch(ex){
+    }
+  }
+  if(!foundMatch) return <></>;
+  return <Script src={encodeURI(joinUrlPath(cms_server_url, 'js/jsHarmonyCMS.js'))}></Script>
 }
 
-export async function getStandalone(pathname: string, content_path : string, content_url : string | undefined, searchParams: { jshcms_token: string | undefined}) {
+export async function getStandalone(pathname: string, content_path : string, content_url : string | undefined, searchParams: { jshcms_token: string | undefined, jshcms_url : string | undefined }, cms_server_urls : string[]) {
   let cmsPage = await getPage(pathname, content_path, content_url);
-  if (searchParams && searchParams.jshcms_token) {
-    cmsPage.editorScript = getEditorScript();
+  if (searchParams && searchParams.jshcms_token && searchParams.jshcms_url) {
+    cmsPage.editorScript = getEditorScript(searchParams.jshcms_url, cms_server_urls);
   }
   return cmsPage;
+}
+
+export function joinUrlPath(a : string | undefined,b : string | undefined){
+  if(!a) return b||'';
+  if(!b) return a||'';
+  var aEnd = a[a.length-1];
+  var bStart = b[0];
+  while(a.length && ((aEnd=='/')||(aEnd=='\\'))){ a = a.substr(0,a.length-1); if(a.length) aEnd=a[a.length-1]; }
+  while(b.length && ((bStart=='/')||(bStart=='\\'))){ b = b.substr(1); if(b.length) bStart=b[0]; }
+  return a + '/' + b;
 }

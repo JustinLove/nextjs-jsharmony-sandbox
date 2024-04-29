@@ -51,12 +51,14 @@ export default function PlaygroundPage() {
   const searchParamsObject = useSearchParams();
   const searchParams = {
     "jshcms_token": searchParamsObject.get('jshcms_token') || undefined,
+    "jshcms_url": searchParamsObject.get('jshcms_url') || undefined,
   };
   const pathname = usePathname();
   const [cmsPage, setCmsPage] = useState(getDummyPage());
 
   async function getcms() {
-    const page = await getStandalone(pathname + '/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams);
+    const cms_server_urls = [process.env.CMS_SERVER_URL||''];
+    const page = await getStandalone(pathname + '/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams, cms_server_urls);
     setCmsPage(page);
   }
   useEffect(function() { getcms(); }, [pathname, useSearchParams]);

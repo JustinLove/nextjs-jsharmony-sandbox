@@ -15,8 +15,12 @@ export default async function TemplatePage({
     if (searchParams.jshcms_token) url = '';
     else return notFound();
   }
-  const cmsParams = { jshcms_token: (searchParams.jshcms_token || '').toString() };
-  const cmsPage = await getStandalone(url, process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, cmsParams);
+  const cmsParams = {
+    jshcms_token: (searchParams.jshcms_token || '').toString(),
+    jshcms_url: (searchParams.jshcms_url || '').toString(),
+  };
+  const cms_server_urls = [process.env.CMS_SERVER_URL||''];
+  const cmsPage = await getStandalone(url, process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, cmsParams, cms_server_urls);
 
   return (
     <>
