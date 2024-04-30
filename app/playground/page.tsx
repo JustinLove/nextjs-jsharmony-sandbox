@@ -2,7 +2,8 @@
 
 import { Card, Metric, Text, Title, BarList, Flex, Grid } from '@tremor/react';
 import Chart from './chart';
-import { getStandalone, getDummyPage, cmsEditor } from '../lib/jsHarmonyCmsPage';
+import { getDummyPage, cmsEditor } from '../lib/jsHarmonyCmsPage';
+import { jsHarmonyCmsRouter } from '../lib/jsHarmonyCmsRouter';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -56,9 +57,14 @@ export default function PlaygroundPage() {
   const pathname = usePathname();
   const [cmsPage, setCmsPage] = useState(getDummyPage());
 
+  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
+    content_path: process.env.CMS_CONTENT_PATH,
+    content_url: process.env.CMS_CONTENT_URL,
+    cms_server_urls: [process.env.CMS_SERVER_URL||''],
+  });
+
   async function getcms() {
-    const cms_server_urls = [process.env.CMS_SERVER_URL||''];
-    const page = await getStandalone(pathname + '/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams, cms_server_urls);
+    const page = await cms.getStandalone(pathname + '/index.html', searchParams);
     setCmsPage(page);
   }
   useEffect(function() { getcms(); }, [pathname, useSearchParams]);

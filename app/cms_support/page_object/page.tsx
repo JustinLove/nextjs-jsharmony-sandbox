@@ -1,6 +1,7 @@
 
 import { Title } from '@tremor/react';
-import { getStandalone, generateBasicMetadata, cmsStyle, cmsScript, cmsHead, cmsEditor } from '../../lib/jsHarmonyCmsPage';
+import { generateBasicMetadata, cmsStyle, cmsScript, cmsHead, cmsEditor } from '../../lib/jsHarmonyCmsPage';
+import { jsHarmonyCmsRouter } from '../../lib/jsHarmonyCmsRouter';
 
 export const generateMetadata = generateBasicMetadata;
 
@@ -9,8 +10,14 @@ export default async function TemplatePage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
-  const cms_server_urls = [process.env.CMS_SERVER_URL||''];
-  const cmsPage = await getStandalone(searchParams.url, process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams, cms_server_urls);
+
+  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
+    content_path: process.env.CMS_CONTENT_PATH,
+    content_url: process.env.CMS_CONTENT_URL,
+    cms_server_urls: [process.env.CMS_SERVER_URL||''],
+  });
+
+  const cmsPage = await cms.getStandalone(searchParams.url, searchParams);
 
   return (
     <>

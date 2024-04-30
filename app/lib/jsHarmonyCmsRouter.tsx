@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getStandalone, Page } from './jsHarmonyCmsPage';
 
 //matchRedirect - Check if URL matches redirects and return first match
 //Parameters:
@@ -104,20 +105,25 @@ export async function loadRedirectData(redirect_listing_path : string, origin : 
 
 export interface jsHarmonyConfig {
   content_path?: string,
+  content_url?: string,
   redirect_listing_path?: string | null,
   default_document?: string,
+  cms_server_urls: string[],
 }
 
 export interface jsHarmonyCmsRouter {
   content_path: string,
+  content_url: string,
   redirect_listing_path: string | null,
+  cms_server_urls: string[],
   default_document: string,
   getRedirectListingPath(): string | undefined,
   getRedirectData(origin : string): Promise<RedirectEntry[]>,
   getRedirect(request: NextRequest) : Promise<RedirectObject | undefined>,
   routeRedirects(request: NextRequest) : Promise<NextResponse | undefined>,
   hasPageObject(request: NextRequest) : Promise<boolean>,
-  }
+  getStandalone(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) : Promise<Page>,
+}
 
 export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyConfig) : jsHarmonyCmsRouter {
   var _this = this;
@@ -127,12 +133,13 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   //==========
   config = extend({
     content_path: '.',              //(string) File path to published CMS content files
+    content_url: '',                //(string) Url of the server hosting content_path, usually the same server.
     redirect_listing_path: null,    //(string) Path to redirect listing JSON file (relative to content_path)
     default_document: 'index.html', //(string) Default Directory Document
     //strict_url_resolution: false,   //(bool) Whether to support URL variations (appending "/" or Default Document)
     //passthru_timeout: 30,           //(int) Maximum number of seconds for passthru request
     //cms_clientjs_editor_launcher_path: '/.jsHarmonyCms/jsHarmonyCmsEditor.js', //(string) Path where router will serve the client-side JS script that launches CMS Editor
-    //cms_server_urls: [],            //Array(string) The CMS Server URLs that will be enabled for Page Editing (set to '*' to enable any remote CMS)
+    cms_server_urls: [],            //Array(string) The CMS Server URLs that will be enabled for Page Editing (set to '*' to enable any remote CMS)
                                     //  * Used by page.editorScript, and the getEditorScript function
                                     //  * NOT used by jsHarmonyCmsEditor.js - the launcher instead uses access_keys for validating the remote CMS
   }, config);
@@ -175,6 +182,10 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
 
   this.hasPageObject = async function(request: NextRequest) {
     return await hasPageObject(request, this.content_path);
+  }
+
+  this.getStandalone = async function(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) {
+    return await getStandalone(pathname, this.content_path, this.content_url, searchParams, this.cms_server_urls);
   }
 
   return this;
