@@ -1,6 +1,5 @@
 
 import { Title } from '@tremor/react';
-import { notFound } from 'next/navigation';
 import { getStandalone, generateBasicMetadata, cmsStyle, cmsScript, cmsHead, cmsEditor } from '../../lib/jsHarmonyCmsPage';
 
 export const generateMetadata = generateBasicMetadata;
@@ -10,17 +9,8 @@ export default async function TemplatePage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
-  let url = searchParams.url;
-  if (typeof(url) !== 'string') {
-    if (searchParams.jshcms_token) url = '';
-    else return notFound();
-  }
-  const cmsParams = {
-    jshcms_token: (searchParams.jshcms_token || '').toString(),
-    jshcms_url: (searchParams.jshcms_url || '').toString(),
-  };
   const cms_server_urls = [process.env.CMS_SERVER_URL||''];
-  const cmsPage = await getStandalone(url, process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, cmsParams, cms_server_urls);
+  const cmsPage = await getStandalone(searchParams.url, process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams, cms_server_urls);
 
   return (
     <>

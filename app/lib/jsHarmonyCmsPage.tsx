@@ -1,5 +1,6 @@
 
 import { Metadata, ResolvingMetadata } from 'next'
+import { notFound } from 'next/navigation';
 import Script from 'next/script'
 
 export interface Page {
@@ -160,10 +161,17 @@ export function getEditorScript(cms_server_url : string, cms_server_urls : strin
   return <Script src={encodeURI(joinUrlPath(cms_server_url, 'js/jsHarmonyCMS.js'))}></Script>
 }
 
-export async function getStandalone(pathname: string, content_path : string, content_url : string | undefined, searchParams: { jshcms_token: string | undefined, jshcms_url : string | undefined }, cms_server_urls : string[]) {
+export async function getStandalone(pathname: string | string[] | undefined, content_path : string, content_url : string | undefined, searchParams: { [key: string]: string | string[] | undefined }, cms_server_urls : string[]) {
+
+  if (typeof(pathname) !== 'string') {
+    if (searchParams.jshcms_token) pathname = '';
+    else notFound(); // throws
+  }
+
   let cmsPage = await getPage(pathname, content_path, content_url);
   if (searchParams && searchParams.jshcms_token && searchParams.jshcms_url) {
-    cmsPage.editorScript = getEditorScript(searchParams.jshcms_url, cms_server_urls);
+    const jshcms_url : string = (searchParams.jshcms_url || '').toString();
+    cmsPage.editorScript = getEditorScript(jshcms_url, cms_server_urls);
   }
   return cmsPage;
 }
