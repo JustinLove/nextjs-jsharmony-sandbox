@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { jsHarmonyCmsRouter } from './app/lib/cms_router'
+import { jsHarmonyCmsRouter } from './app/lib/jsHarmonyCmsRouter'
 
 export async function middleware(request: NextRequest) {
 

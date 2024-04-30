@@ -1,7 +1,7 @@
 
 import { Title } from '@tremor/react';
 import { notFound } from 'next/navigation';
-import { getStandalone, generateBasicMetadata, cmsStyle, cmsScript, cmsHead, cmsEditor } from '../../lib/cms_page';
+import { getStandalone, generateBasicMetadata, cmsStyle, cmsScript, cmsHead, cmsEditor } from '../../lib/jsHarmonyCmsPage';
 
 export const generateMetadata = generateBasicMetadata;
 
