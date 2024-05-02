@@ -1,6 +1,6 @@
 
 import { Title } from '@tremor/react';
-import { generateBasicMetadata, cmsStyle, cmsScript, cmsHead, cmsEditor } from '../../lib/jsHarmonyCmsPage';
+import { generateBasicMetadata } from '../../lib/jsHarmonyCmsPage';
 import { jsHarmonyCmsRouter } from '../../lib/jsHarmonyCmsRouter';
 
 export const generateMetadata = generateBasicMetadata;
@@ -21,10 +21,10 @@ export default async function TemplatePage({
 
   return (
     <>
-      {cmsStyle(cmsPage)}
-      {cmsScript(cmsPage)}
-      {cmsHead(cmsPage)}
-      {cmsEditor(cmsPage)}
+      {cms.styleTag(cmsPage)}
+      {cms.scriptTag(cmsPage)}
+      {cms.headTag(cmsPage)}
+      {cms.editorTag(cmsPage)}
       <main className="p-4 md:p-10 mx-auto max-w-7xl">
         <Title cms-title="true">{cmsPage.title}</Title>
         <div cms-content-editor="page.content.body" dangerouslySetInnerHTML={{ __html: cmsPage.content.body || ''}}></div>

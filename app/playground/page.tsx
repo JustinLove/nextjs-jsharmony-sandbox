@@ -2,7 +2,6 @@
 
 import { Card, Metric, Text, Title, BarList, Flex, Grid } from '@tremor/react';
 import Chart from './chart';
-import { getDummyPage, cmsEditor } from '../lib/jsHarmonyCmsPage';
 import { jsHarmonyCmsRouter } from '../lib/jsHarmonyCmsRouter';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -49,19 +48,20 @@ const data = [
 ];
 
 export default function PlaygroundPage() {
-  const searchParamsObject = useSearchParams();
-  const searchParams = {
-    "jshcms_token": searchParamsObject.get('jshcms_token') || undefined,
-    "jshcms_url": searchParamsObject.get('jshcms_url') || undefined,
-  };
-  const pathname = usePathname();
-  const [cmsPage, setCmsPage] = useState(getDummyPage());
 
   const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
     content_path: process.env.CMS_CONTENT_PATH,
     content_url: process.env.CMS_CONTENT_URL,
     cms_server_urls: [process.env.CMS_SERVER_URL||''],
   });
+
+  const searchParamsObject = useSearchParams();
+  const searchParams = {
+    "jshcms_token": searchParamsObject.get('jshcms_token') || undefined,
+    "jshcms_url": searchParamsObject.get('jshcms_url') || undefined,
+  };
+  const pathname = usePathname();
+  const [cmsPage, setCmsPage] = useState(cms.getBlankPage());
 
   async function getcms() {
     const page = await cms.getStandalone(pathname + '/index.html', searchParams);
@@ -70,7 +70,7 @@ export default function PlaygroundPage() {
   useEffect(function() { getcms(); }, [pathname, useSearchParams]);
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
-      {cmsEditor(cmsPage)}
+      {cms.editorTag(cmsPage)}
       <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
       <Grid numItemsSm={2} numItemsLg={3} className="gap-6">
         {data.map((item) => (

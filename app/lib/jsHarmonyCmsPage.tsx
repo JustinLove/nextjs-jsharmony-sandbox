@@ -6,7 +6,7 @@ import Script from 'next/script'
 export interface Page {
   content: { [areaId: string]: string };
   css: string;
-  editorScript: String;
+  editorScript: React.JSX.Element | undefined;
   footer: string;
   header: string;
   isInEditor: boolean;
@@ -51,7 +51,7 @@ type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export function getDummyPage(): Page {
+export function getBlankPage(): Page {
   return {
     seo: {
       title: '',
@@ -70,12 +70,12 @@ export function getDummyPage(): Page {
     properties: {},
     page_template_id: '',
     isInEditor: false,
-    editorScript: '',
+    editorScript: undefined,
   };
 }
 
 export async function getPage(pathname : string | string[] | undefined, content_path : string, content_url : string | undefined) {
-  if (typeof(pathname) !== 'string') return getDummyPage();
+  if (typeof(pathname) !== 'string') return getBlankPage();
   const url = new URL(content_path+pathname, content_url);
   const pageResponse = await fetch(url); // next fetch is cached, so this can be shared between metadata and content
   if (pageResponse.ok) {
@@ -83,7 +83,7 @@ export async function getPage(pathname : string | string[] | undefined, content_
     return page;
   }
 
-  return getDummyPage();
+  return getBlankPage();
 }
 
 export async function generateBasicMetadata(
@@ -99,7 +99,7 @@ export async function generateBasicMetadata(
   return pageMeta;
 }
 
-export function cmsStyle(cmsPage : Page) {
+export function cmsStyleTag(cmsPage : Page) {
   if (cmsPage.css) {
     return (
       <style type="text/css" dangerouslySetInnerHTML={{ __html: cmsPage.css || ''}}></style>
@@ -107,7 +107,7 @@ export function cmsStyle(cmsPage : Page) {
   }
 }
 
-export function cmsScript(cmsPage : Page) {
+export function cmsScriptTag(cmsPage : Page) {
   if (cmsPage.js) {
     return (
       <Script type="text/javascript" dangerouslySetInnerHTML={{ __html: cmsPage.js || ''}}></Script>
@@ -115,7 +115,7 @@ export function cmsScript(cmsPage : Page) {
   }
 }
 
-export function cmsHead(cmsPage : Page) {
+export function cmsHeadTag(cmsPage : Page) {
   if (cmsPage.header) {
     return (
       <div dangerouslySetInnerHTML={{ __html: cmsPage.header || ''}}></div>
@@ -123,7 +123,7 @@ export function cmsHead(cmsPage : Page) {
   }
 }
 
-export function cmsEditor(cmsPage : Page) {
+export function cmsEditorTag(cmsPage : Page) {
   if (cmsPage.editorScript) {
     return cmsPage.editorScript;
   }

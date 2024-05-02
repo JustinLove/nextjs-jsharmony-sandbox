@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getStandalone, Page } from './jsHarmonyCmsPage';
+import { getStandalone, getBlankPage, Page, cmsStyleTag, cmsHeadTag, cmsScriptTag, cmsEditorTag } from './jsHarmonyCmsPage';
 
 //matchRedirect - Check if URL matches redirects and return first match
 //Parameters:
@@ -123,6 +123,11 @@ export interface jsHarmonyCmsRouter {
   routeRedirects(request: NextRequest) : Promise<NextResponse | undefined>,
   hasPageObject(request: NextRequest) : Promise<boolean>,
   getStandalone(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) : Promise<Page>,
+  getBlankPage() : Page,
+  styleTag(page: Page) : React.JSX.Element | undefined,
+  scriptTag(page: Page) : React.JSX.Element | undefined,
+  headTag(page: Page) : React.JSX.Element | undefined,
+  editorTag(page: Page) : React.JSX.Element | undefined,
 }
 
 export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyConfig) : jsHarmonyCmsRouter {
@@ -187,6 +192,12 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   this.getStandalone = async function(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) {
     return await getStandalone(pathname, this.content_path, this.content_url, searchParams, this.cms_server_urls);
   }
+
+  this.getBlankPage = getBlankPage;
+  this.styleTag = cmsStyleTag;
+  this.scriptTag = cmsScriptTag;
+  this.headTag = cmsHeadTag;
+  this.editorTag = cmsEditorTag;
 
   return this;
 }

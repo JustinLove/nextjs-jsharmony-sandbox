@@ -2,7 +2,8 @@ import conn from './db';
 import { Card, Title, Text } from '@tremor/react';
 import Search from './search';
 import UsersTable from './table';
-import { getStandalone, cmsEditor } from './lib/jsHarmonyCmsPage';
+import { jsHarmonyCmsRouter } from './lib/jsHarmonyCmsRouter';
+
 
 interface User {
   id: number;
@@ -16,8 +17,14 @@ export default async function IndexPage({
 }: {
   searchParams: { q: string, jshcms_token: string, jshcms_url: string };
 }) {
-  const cms_server_urls = [process.env.CMS_SERVER_URL||''];
-  const cmsPage = await getStandalone('/index.html', process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, searchParams, cms_server_urls);
+  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
+    content_path: process.env.CMS_CONTENT_PATH,
+    content_url: process.env.CMS_CONTENT_URL,
+    cms_server_urls: [process.env.CMS_SERVER_URL||''],
+  });
+
+  const cmsPage = await cms.getStandalone('/index.html', searchParams);
+
   const search = searchParams.q ?? '';
   const query = `
     SELECT id, name, username, email 
@@ -28,7 +35,7 @@ export default async function IndexPage({
 
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
-      {cmsEditor(cmsPage)}
+      {cms.editorTag(cmsPage)}
       <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
       <Title cms-title="true">{cmsPage.title}</Title>
       <div cms-content-editor="page.content.description" dangerouslySetInnerHTML={{ __html: cmsPage.content.description || 'A list of users retrieved from a Postgres database.'}}></div>
