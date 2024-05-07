@@ -61,6 +61,11 @@ type RedirectObject = {
   url: string,
 }
 
+//hasPageObject - Check if a page object file exists to decide if a route is available.
+//Parameters:
+//  request: (NextRequest) Request object providing target path and origin
+//  content_path: (string) Path to CMS output folder
+//Returns: (boolean)
 export async function hasPageObject(request: NextRequest, content_path : string) {
   const pathname = request.nextUrl.pathname;
 
@@ -69,6 +74,11 @@ export async function hasPageObject(request: NextRequest, content_path : string)
   return !!pageResponse.ok;
 }
 
+//getRedirect - Looks up matching redirect, if any.
+//Parameters:
+//  request: (NextRequest) Request object providing target path and origin
+//  redirect_listing_path: (string) Path to exported CMS redirects
+//Returns: (RedirectObject) path and code if found
 export async function getRedirect(request: NextRequest, redirect_listing_path : string) : Promise<RedirectObject | undefined> {
   const pathname = request.nextUrl.pathname;
 
@@ -79,6 +89,11 @@ export async function getRedirect(request: NextRequest, redirect_listing_path : 
   }
 }
 
+//defaultRedirects - Provides simple handling of redirects in Next.js, replace as needed.
+//Parameters:
+//  redirectObject: (RedirectObject) Path and code of a found redirect
+//  requestUrl: (string|URL) Original request url
+//Returns: (NextResponse) Response, if a valid redirect was provided.
 export function defaultRedirects(redirectObject : RedirectObject, requestUrl : string | URL | undefined) : NextResponse | undefined {
   switch(redirectObject.http_code) {
     case '301': return NextResponse.redirect(new URL(redirectObject.url, requestUrl), 301);
@@ -87,11 +102,20 @@ export function defaultRedirects(redirectObject : RedirectObject, requestUrl : s
   }
 }
 
-export async function routeRedirects(request: NextRequest, redirect_listing_path : string) {
+//routeRedirects - Small helper function to look up and execute redirects
+//Parameters:
+//  request: (NextRequest) Request object providing target path and origin
+//  redirect_listing_path: (string) Path to exported CMS redirects
+//Returns: (NextResponse) Response, if a redirect was found
+export async function routeRedirects(request: NextRequest, redirect_listing_path : string) : Promise<NextResponse | undefined> {
   const redirectObject = await getRedirect(request, redirect_listing_path);
   if (redirectObject) return defaultRedirects(redirectObject, request.url);
 }
 
+//loadRedirectData - Load and parse the redirects file
+//Parameters:
+//  redirect_listing_path: (string) Path to exported CMS redirects
+//Returns: (Array(RedirectEntry)) List of redirects
 export async function loadRedirectData(redirect_listing_path : string, origin : string) : Promise<RedirectEntry[]> {
   const url = new URL(redirect_listing_path, origin);
 
@@ -167,36 +191,107 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   }
 
   //getRedirectData - Get CMS Redirect Data
+  //Parameters:
+  //  origin: (string) http origin
   //Returns Array(object) Redirects
+  //Redirect Object {
+  //    http_code: (string) '301', '302', or 'PASSTHRU',
+  //    url: (string) 'destination/url',
+  //}
   this.getRedirectData = async function(origin : string) : Promise<RedirectEntry[]> {
     var redirect_listing_path = _this.getRedirectListingPath();
     if(!redirect_listing_path) return [];
     return await loadRedirectData(redirect_listing_path, origin);
   }
 
+  //getRedirect - Lookup the redirect for a request, if any
+  //Parameters:
+  //  request: (NextRequest) Request object providing target path and origin
+  //Returns (RedirectObject) Appropriate redirect, if one was found
+  //Redirect Object {
+  //    http_code: (string) '301', '302', or 'PASSTHRU',
+  //    url: (string) 'destination/url',
+  //}
   this.getRedirect = async function(request: NextRequest) : Promise<RedirectObject | undefined> {
     var redirect_listing_path = _this.getRedirectListingPath();
     if(!redirect_listing_path) return;
     return await getRedirect(request, redirect_listing_path);
   }
 
+  //routeRedirects - Execute the redirect for a request, if any
+  //Parameters:
+  //  request: (NextRequest) Request object providing target path and origin
+  //Returns (NextResponse) Appropriate response, if one was found
   this.routeRedirects = async function(request: NextRequest) : Promise<NextResponse | undefined> {
     const redirect = await this.getRedirect(request);
     if (redirect) return defaultRedirects(redirect, request.url); 
   }
 
+  //hasPageObject - Check if a page object file exists to decide if a route is available.
+  //Parameters:
+  //  request: (NextRequest) Request object providing target path and origin
+  //Returns: (boolean)
   this.hasPageObject = async function(request: NextRequest) {
     return await hasPageObject(request, this.content_path);
   }
 
+  //getStandalone [Main Entry Point] - Get CMS Page Data for Standalone Integration
+  //Parameters:
+  //  pathname: (string) Root relative path being requested
+  //  searchParams: (object) Request url parameters
+  //Returns (object) Page Object, with additional properties: isInEditor, editorContent, notFound
+  //                 * if page is opened from CMS Editor or Not Found, an empty Page Object will be returned
+  //Page Object {
+  //  seo: {
+  //      title (string),   //Title for HEAD tag
+  //      keywords (string),
+  //      metadesc (string),
+  //      canonical_url (string)
+  //  },
+  //  css (string),
+  //  js (string),
+  //  header (string),
+  //  footer (string),
+  //  title (string),      //Title for Page Body Content
+  //  content: {
+  //      <content_area_name>: <content> (string)
+  //  }
+  //  properties: {
+  //      <property_name>: <property_value>
+  //  }
+  //  page_template_id (string),
+  //  isInEditor (bool),     //Whether the page was opened from the CMS Editor
+  //  editorScript (string), //If page was opened from a CMS Editor in config.cms_server_urls, the HTML script to launch the Editor
+  //  notFound (bool)        //Whether the page was Not Found (page data will return empty)
+  //}
   this.getStandalone = async function(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) {
     return await getStandalone(pathname, this.content_path, this.content_url, searchParams, this.cms_server_urls);
   }
 
+  //getBlankPage - An empty Page object, for blank editors or initializing useState
   this.getBlankPage = getBlankPage;
+
+  //================
+  //Tag Helpers
+  //================
+  //Simple tag helpers for conditionally including tags in pages. These are trivial and can be replaced with custom code as needed.
+  //Note: CMS was designed to support additional head tags. Next.js App Router takes full control of the head, so these must be placed elsewhere.
+
+  //cmsStyleTag - render additional css (if any) as a style tag
+  //Parameters:
+  //  cmsPage (Page)
   this.styleTag = cmsStyleTag;
+  //cmsScriptTag - render additional javascript (if any) as a script tag
+  //Parameters:
+  //  cmsPage (Page)
   this.scriptTag = cmsScriptTag;
+  //cmsHeadTag - render additional head tags (if any). Note that this feature in particular is questionable with the Next.js App Router.
+  //Parameters:
+  //  cmsPage (Page)
   this.headTag = cmsHeadTag;
+  //cmsEditorTag - render editor support script when page is loaded in the CMS editor.
+  //Parameters:
+  //  cmsPage (Page)
   this.editorTag = cmsEditorTag;
 
   return this;
