@@ -1,6 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next'
 import { Title } from '@tremor/react';
-import { jsHarmonyCmsRouter } from '../../lib/jsHarmonyCmsRouter';
+import cms from '../../lib/cms';
 
 type Props = {
   params: { id: string }
@@ -11,12 +11,6 @@ export async function generateMetadata(
   { params, searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
-    content_path: process.env.CMS_CONTENT_PATH,
-    content_url: process.env.CMS_CONTENT_URL,
-    default_document: 'index.html',
-  });
-
   return await cms.generateBasicMetadata({params, searchParams}, parent);
 }
 
@@ -25,13 +19,6 @@ export default async function TemplatePage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
-
-  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
-    content_path: process.env.CMS_CONTENT_PATH,
-    content_url: process.env.CMS_CONTENT_URL,
-    cms_server_urls: [process.env.CMS_SERVER_URL||''],
-  });
-
   const cmsPage = await cms.getStandalone(searchParams.url, searchParams);
 
   return (

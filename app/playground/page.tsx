@@ -2,7 +2,7 @@
 
 import { Card, Metric, Text, Title, BarList, Flex, Grid } from '@tremor/react';
 import Chart from './chart';
-import { jsHarmonyCmsRouter } from '../lib/jsHarmonyCmsRouter';
+import cms from '../lib/cms';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -48,12 +48,6 @@ const data = [
 ];
 
 export default function PlaygroundPage() {
-
-  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
-    content_path: process.env.CMS_CONTENT_PATH,
-    content_url: process.env.CMS_CONTENT_URL,
-    cms_server_urls: [process.env.CMS_SERVER_URL||''],
-  });
 
   const searchParamsObject = useSearchParams();
   const searchParams = {

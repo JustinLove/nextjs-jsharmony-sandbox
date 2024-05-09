@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { jsHarmonyCmsRouter } from './app/lib/jsHarmonyCmsRouter'
+import cms from './app/lib/cms';
 
 export async function middleware(request: NextRequest) {
-
-  var cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
-    content_path: process.env.CMS_CONTENT_PATH,
-    redirect_listing_path: '/cms/jshcms_redirects.json',
-  });
 
   if (await cms.hasPageObject(request)) {
     const pathname = request.nextUrl.pathname;

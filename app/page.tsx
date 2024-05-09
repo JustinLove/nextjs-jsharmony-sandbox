@@ -2,7 +2,7 @@ import conn from './db';
 import { Card, Title, Text } from '@tremor/react';
 import Search from './search';
 import UsersTable from './table';
-import { jsHarmonyCmsRouter } from './lib/jsHarmonyCmsRouter';
+import cms from './lib/cms';
 
 
 interface User {
@@ -17,12 +17,6 @@ export default async function IndexPage({
 }: {
   searchParams: { q: string, jshcms_token: string, jshcms_url: string };
 }) {
-  const cms : jsHarmonyCmsRouter = new (jsHarmonyCmsRouter as any)({
-    content_path: process.env.CMS_CONTENT_PATH,
-    content_url: process.env.CMS_CONTENT_URL,
-    cms_server_urls: [process.env.CMS_SERVER_URL||''],
-  });
-
   const cmsPage = await cms.getStandalone('/index.html', searchParams);
 
   const search = searchParams.q ?? '';
