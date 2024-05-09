@@ -79,6 +79,7 @@ export function getBlankPage(): Page {
 //  pathname: (string) Root-relative Page URL
 //  content_path: (string) CMS content export folder
 //  content_url: (string) CMS content origin server
+//  default_document: (string) default document if not in url, e.g. 'index.html'
 //Returns (object) Page Object
 //Page Object {
 //  seo: {
@@ -100,13 +101,17 @@ export function getBlankPage(): Page {
 //  },
 //  page_template_id (string)
 //}
-export async function getPage(pathname : string | string[] | undefined, content_path : string, content_url : string | undefined) : Promise<Page> {
+export async function getPage(pathname : string | string[] | undefined, content_path : string, content_url : string | undefined, default_document : string) : Promise<Page> {
   if (typeof(pathname) !== 'string') return getBlankPage();
-  const url = new URL(content_path+pathname, content_url);
-  const pageResponse = await fetch(url); // next fetch is cached, so this can be shared between metadata and content
-  if (pageResponse.ok) {
-    const page = await pageResponse.json();
-    return page;
+  const variations = pathResolve(content_path, pathname, default_document);
+  for (let i in variations) {
+    const pathname = variations[i];
+    const url = new URL(pathname, content_url);
+    const pageResponse = await fetch(url); // next fetch is cached, so this can be shared between metadata and content
+    if (pageResponse.ok) {
+      const page = await pageResponse.json();
+      return page;
+    }
   }
 
   return getBlankPage();
@@ -121,7 +126,7 @@ export async function generateBasicMetadata(
   { params, searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const cmsPage = await getPage(searchParams.url,  process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URl);
+  const cmsPage = await getPage(searchParams.url,  process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, process.env.CMS_DEFAULT_DOCUMENT || 'index.html');
   let pageMeta : Metadata = {};
   if (cmsPage.seo.title) pageMeta.title = cmsPage.seo.title;
   if (cmsPage.seo.keywords) pageMeta.keywords = cmsPage.seo.keywords;
@@ -222,6 +227,7 @@ export function getEditorScript(cms_server_url : string, cms_server_urls : strin
 //  pathname: (string) Root relative path being requested
 //  content_path: (string) CMS content export folder
 //  content_url: (string) CMS content origin server
+//  default_document: (string) default document if not in url, e.g. 'index.html'
 //  searchParams: (object) Request url parameters
 //  cms_server_urls: Array(string) List of allowed urls for CMS editor servers.
 //Returns (object) Page Object, with additional properties: isInEditor, editorContent, notFound
@@ -249,19 +255,81 @@ export function getEditorScript(cms_server_url : string, cms_server_urls : strin
 //  editorScript (string), //If page was opened from a CMS Editor in config.cms_server_urls, the HTML script to launch the Editor
 //  notFound (bool)        //Whether the page was Not Found (page data will return empty)
 //}
-export async function getStandalone(pathname: string | string[] | undefined, content_path : string, content_url : string | undefined, searchParams: { [key: string]: string | string[] | undefined }, cms_server_urls : string[]) {
+export async function getStandalone(pathname: string | string[] | undefined, content_path : string, content_url : string | undefined, default_document : string, searchParams: { [key: string]: string | string[] | undefined }, cms_server_urls : string[]) {
 
   if (typeof(pathname) !== 'string') {
     if (searchParams.jshcms_token) pathname = '';
     else notFound(); // throws
   }
 
-  let cmsPage = await getPage(pathname, content_path, content_url);
+  let cmsPage = await getPage(pathname, content_path, content_url, default_document);
   if (searchParams && searchParams.jshcms_token && searchParams.jshcms_url) {
     const jshcms_url : string = (searchParams.jshcms_url || '').toString();
     cmsPage.editorScript = getEditorScript(jshcms_url, cms_server_urls);
   }
   return cmsPage;
+}
+
+//pathToContent - Transform a page url into cms content file path
+//Parameters:
+//  content_path: (string) CMS content export folder
+//  pathname: (string) Root relative path being requested
+//Returns (string) normalized path
+export function pathToContent(content_path : string, pathname : string) : string {
+  if(!pathname) pathname = '';
+  //If URL is not absolute, add starting "/"
+  if(pathname.indexOf('//')<0){
+    if(pathname.indexOf('/') != 0){
+      if(pathname.indexOf('\\')==0) pathname = pathname.substr(1);
+      pathname = '/' + pathname;
+    }
+  }
+
+  return joinUrlPath(content_path, pathname);
+}
+
+//pathVariations - creations variations of a cms content path to try, e.g. as provided and with index.html
+//Parameters:
+//  pathname: (string) Root relative path being requested
+//  default_document: (string) default document if not in url, e.g. 'index.html'
+//Returns Array(string) list of paths to try
+export function pathVariations(pathname : string, default_document : string) : string[] {
+  //Add trailing slash and "/index.html", if applicable
+  if(pathname && ((pathname[pathname.length-1]=='/')||(pathname[pathname.length-1]=='\\'))){
+    return [pathname, joinUrlPath(pathname, default_document)];
+  } else {
+    var url_ext = getExtension(pathname);
+    var default_ext = getExtension(default_document);
+    if(url_ext && default_ext && (url_ext == default_ext)) return [pathname];
+    else {
+      return [pathname, joinUrlPath(pathname, default_document)];
+    }
+  }
+}
+
+//pathResolve - Convert URL to CMS Content Paths
+//Parameters:
+//  content_path: (string) CMS content export folder
+//  pathname: (string) Root relative path being requested
+//  default_document: (string) default document if not in url, e.g. 'index.html'
+//Returns Array(string) list of paths to try
+export function pathResolve(content_path: string, pathname : string, default_document : string) : string[] {
+  pathname = pathToContent(content_path, pathname);
+
+  return pathVariations(pathname, default_document);
+}
+
+function getExtension(path : string) : string {
+  if(!path) return '';
+  var lastSlash = 0;
+  for(var i=path.length-1;i>=0;i--){
+    if((path[i]=='/')||(path[i]=='\\')){ lastSlash = i+1; break; }
+  }
+  path = path.substr(lastSlash);
+  if(!path) return '';
+  var lastDot = path.lastIndexOf('.');
+  if(lastDot >= 0) path = path.substr(lastDot);
+  return path;
 }
 
 function joinUrlPath(a : string | undefined,b : string | undefined){

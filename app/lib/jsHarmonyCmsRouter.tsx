@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getStandalone, getBlankPage, Page, cmsStyleTag, cmsHeadTag, cmsScriptTag, cmsEditorTag } from './jsHarmonyCmsPage';
+import { getStandalone, pathResolve, getBlankPage, Page, cmsStyleTag, cmsHeadTag, cmsScriptTag, cmsEditorTag } from './jsHarmonyCmsPage';
 
 //matchRedirect - Check if URL matches redirects and return first match
 //Parameters:
@@ -66,12 +66,17 @@ type RedirectObject = {
 //  request: (NextRequest) Request object providing target path and origin
 //  content_path: (string) Path to CMS output folder
 //Returns: (boolean)
-export async function hasPageObject(request: NextRequest, content_path : string) {
-  const pathname = request.nextUrl.pathname;
+export async function hasPageObject(request: NextRequest, content_path : string, default_document : string) {
+  const variations = pathResolve(content_path, request.nextUrl.pathname, default_document);
 
-  const url = new URL(content_path+pathname, request.nextUrl.origin);
-  const pageResponse = await fetch(url);
-  return !!pageResponse.ok;
+  for (let i in variations) {
+    const pathname = variations[i];
+    const url = new URL(pathname, request.nextUrl.origin);
+    const pageResponse = await fetch(url);
+    if (pageResponse.ok) return true;
+  }
+
+  return false;
 }
 
 //getRedirect - Looks up matching redirect, if any.
@@ -232,7 +237,7 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   //  request: (NextRequest) Request object providing target path and origin
   //Returns: (boolean)
   this.hasPageObject = async function(request: NextRequest) {
-    return await hasPageObject(request, this.content_path);
+    return await hasPageObject(request, this.content_path, this.default_document);
   }
 
   //getStandalone [Main Entry Point] - Get CMS Page Data for Standalone Integration
@@ -265,7 +270,7 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   //  notFound (bool)        //Whether the page was Not Found (page data will return empty)
   //}
   this.getStandalone = async function(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) {
-    return await getStandalone(pathname, this.content_path, this.content_url, searchParams, this.cms_server_urls);
+    return await getStandalone(pathname, this.content_path, this.content_url, this.default_document, searchParams, this.cms_server_urls);
   }
 
   //getBlankPage - An empty Page object, for blank editors or initializing useState
