@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getStandalone, pathResolve, getBlankPage, Page, cmsStyleTag, cmsHeadTag, cmsScriptTag, cmsEditorTag } from './jsHarmonyCmsPage';
+import { Metadata, ResolvingMetadata } from 'next'
+import { getStandalone, generateBasicMetadata, pathResolve, getBlankPage, Page, cmsStyleTag, cmsHeadTag, cmsScriptTag, cmsEditorTag } from './jsHarmonyCmsPage';
 
 //matchRedirect - Check if URL matches redirects and return first match
 //Parameters:
@@ -133,6 +134,11 @@ export async function loadRedirectData(redirect_listing_path : string, origin : 
   return [];
 }
 
+type Props = {
+  params: { id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
 export interface jsHarmonyConfig {
   content_path?: string,
   content_url?: string,
@@ -154,6 +160,10 @@ export interface jsHarmonyCmsRouter {
   hasPageObject(request: NextRequest) : Promise<boolean>,
   getStandalone(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) : Promise<Page>,
   getBlankPage() : Page,
+  generateBasicMetadata(
+    { params, searchParams }: Props,
+    parent: ResolvingMetadata
+  ): Promise<Metadata>,
   styleTag(page: Page) : React.JSX.Element | undefined,
   scriptTag(page: Page) : React.JSX.Element | undefined,
   headTag(page: Page) : React.JSX.Element | undefined,
@@ -276,6 +286,15 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
 
   //getBlankPage - An empty Page object, for blank editors or initializing useState
   this.getBlankPage = getBlankPage;
+
+  //generateBasicMetadata - provides a basic version of a Next.js metadata function that provides CMS SEO data. If you application has additional metadata needs, you may wish to copy the base function into your generateMetadata function.
+  // https://nextjs.org/docs/app/api-reference/functions/generate-metadata
+  this.generateBasicMetadata = async function(
+    { params, searchParams }: Props,
+    parent: ResolvingMetadata
+  ): Promise<Metadata> {
+    return await generateBasicMetadata({params, searchParams}, parent, this);
+  }
 
   //================
   //Tag Helpers

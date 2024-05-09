@@ -45,11 +45,6 @@ export interface Page {
   title: string;
 }
 
-type Props = {
-  params: { id: string }
-  searchParams: { [key: string]: string | string[] | undefined }
-}
-
 //getBlankPage - An empty Page object, for blank editors or initializing useState
 export function getBlankPage(): Page {
   return {
@@ -83,7 +78,7 @@ export interface getPageConfig {
 //getPage - Get CMS Page Data
 //Parameters:
 //  pathname: (string) Root-relative Page URL
-//  config: (object) Configuratoin parameters {
+//  config: (object) Configuration parameters {
 //    content_path: (string) CMS content export folder
 //    content_url: (string) CMS content origin server
 //    default_document: (string) default document if not in url, e.g. 'index.html'
@@ -125,20 +120,24 @@ export async function getPage(pathname : string | string[] | undefined, config :
   return getBlankPage();
 }
 
+type Props = {
+  params: { id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
 //generateBasicMetadata - provides a basic version of a Next.js metadata function that provides CMS SEO data. If you application has additional metadata needs, you may wish to copy this function into your generateMetadata function.
-//Since this is intended to be usable directly as your pages generateMetadata function, it must get configuration from the environment.
-//  CMS_CONTENT_PATH - CMS export folder path
-//  CMS_CONTENT_URL - CMS export origin server
 // https://nextjs.org/docs/app/api-reference/functions/generate-metadata
+//  config: (object) Configuration parameters {
+//    content_path: (string) CMS content export folder
+//    content_url: (string) CMS content origin server
+//    default_document: (string) default document if not in url, e.g. 'index.html'
+//  }
 export async function generateBasicMetadata(
   { params, searchParams }: Props,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
+  config: getPageConfig,
 ): Promise<Metadata> {
-  const cmsPage = await getPage(searchParams.url, {
-    content_path:  process.env.CMS_CONTENT_PATH || '',
-    content_url: process.env.CMS_CONTENT_URL,
-    default_document: process.env.CMS_DEFAULT_DOCUMENT || 'index.html',
-  });
+  const cmsPage = await getPage(searchParams.url, config);
   let pageMeta : Metadata = {};
   if (cmsPage.seo.title) pageMeta.title = cmsPage.seo.title;
   if (cmsPage.seo.keywords) pageMeta.keywords = cmsPage.seo.keywords;
@@ -245,7 +244,7 @@ export interface standaloneConfig {
 //Parameters:
 //  pathname: (string) Root relative path being requested
 //  searchParams: (object) Request url parameters
-//  config: (object) Configuratoin parameters {
+//  config: (object) Configuration parameters {
 //    content_path: (string) CMS content export folder
 //    content_url: (string) CMS content origin server
 //    default_document: (string) default document if not in url, e.g. 'index.html'
