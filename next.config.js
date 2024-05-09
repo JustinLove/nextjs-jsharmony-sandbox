@@ -12,6 +12,16 @@ const nextConfig = {
       }
     ]
   },
+  async rewrites() {
+    return {
+      fallback: [
+        {
+          source: '/:url((?!cms).*)',
+          destination: '/cms_support/page_object',
+        },
+      ],
+    };
+  },
   env: {
     CMS_CONTENT_PATH: process.env.CMS_CONTENT_PATH,
     CMS_CONTENT_URL: process.env.CMS_CONTENT_URL,

@@ -4,10 +4,13 @@ import cms from './app/lib/cms';
 
 export async function middleware(request: NextRequest) {
 
+/* This method adds fetches to every request and requires care about conflicts between object pages and standalone page objects
+  See next.config for fallback wildcard rewrite version.
   if (await cms.hasPageObject(request)) {
     const pathname = request.nextUrl.pathname;
     return NextResponse.rewrite(new URL('/cms_support/page_object?url='+encodeURIComponent(pathname), request.url));
   }
+*/
 
   const redirectResponse = await cms.routeRedirects(request);
   if (redirectResponse) return redirectResponse;
