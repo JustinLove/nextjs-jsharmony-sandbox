@@ -65,6 +65,7 @@ type RedirectObject = {
 //Parameters:
 //  request: (NextRequest) Request object providing target path and origin
 //  content_path: (string) Path to CMS output folder
+//  default_document: (string) default document if not in url, e.g. 'index.html'
 //Returns: (boolean)
 export async function hasPageObject(request: NextRequest, content_path : string, default_document : string) {
   const variations = pathResolve(content_path, request.nextUrl.pathname, default_document);
@@ -270,7 +271,7 @@ export function jsHarmonyCmsRouter(this: jsHarmonyCmsRouter, config : jsHarmonyC
   //  notFound (bool)        //Whether the page was Not Found (page data will return empty)
   //}
   this.getStandalone = async function(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }) {
-    return await getStandalone(pathname, this.content_path, this.content_url, this.default_document, searchParams, this.cms_server_urls);
+    return await getStandalone(pathname, searchParams, this);
   }
 
   //getBlankPage - An empty Page object, for blank editors or initializing useState

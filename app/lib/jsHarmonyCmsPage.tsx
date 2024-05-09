@@ -74,12 +74,20 @@ export function getBlankPage(): Page {
   };
 }
 
+export interface getPageConfig {
+  content_path: string,
+  content_url: string | undefined,
+  default_document: string,
+}
+
 //getPage - Get CMS Page Data
 //Parameters:
 //  pathname: (string) Root-relative Page URL
-//  content_path: (string) CMS content export folder
-//  content_url: (string) CMS content origin server
-//  default_document: (string) default document if not in url, e.g. 'index.html'
+//  config: (object) Configuratoin parameters {
+//    content_path: (string) CMS content export folder
+//    content_url: (string) CMS content origin server
+//    default_document: (string) default document if not in url, e.g. 'index.html'
+//  }
 //Returns (object) Page Object
 //Page Object {
 //  seo: {
@@ -101,12 +109,12 @@ export function getBlankPage(): Page {
 //  },
 //  page_template_id (string)
 //}
-export async function getPage(pathname : string | string[] | undefined, content_path : string, content_url : string | undefined, default_document : string) : Promise<Page> {
+export async function getPage(pathname : string | string[] | undefined, config : getPageConfig) : Promise<Page> {
   if (typeof(pathname) !== 'string') return getBlankPage();
-  const variations = pathResolve(content_path, pathname, default_document);
+  const variations = pathResolve(config.content_path, pathname, config.default_document);
   for (let i in variations) {
     const pathname = variations[i];
-    const url = new URL(pathname, content_url);
+    const url = new URL(pathname, config.content_url);
     const pageResponse = await fetch(url); // next fetch is cached, so this can be shared between metadata and content
     if (pageResponse.ok) {
       const page = await pageResponse.json();
@@ -126,7 +134,11 @@ export async function generateBasicMetadata(
   { params, searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const cmsPage = await getPage(searchParams.url,  process.env.CMS_CONTENT_PATH || '', process.env.CMS_CONTENT_URL, process.env.CMS_DEFAULT_DOCUMENT || 'index.html');
+  const cmsPage = await getPage(searchParams.url, {
+    content_path:  process.env.CMS_CONTENT_PATH || '',
+    content_url: process.env.CMS_CONTENT_URL,
+    default_document: process.env.CMS_DEFAULT_DOCUMENT || 'index.html',
+  });
   let pageMeta : Metadata = {};
   if (cmsPage.seo.title) pageMeta.title = cmsPage.seo.title;
   if (cmsPage.seo.keywords) pageMeta.keywords = cmsPage.seo.keywords;
@@ -222,14 +234,23 @@ export function getEditorScript(cms_server_url : string, cms_server_urls : strin
   return <Script src={encodeURI(joinUrlPath(cms_server_url, 'js/jsHarmonyCMS.js'))}></Script>
 }
 
+export interface standaloneConfig {
+  content_path: string,
+  content_url: string | undefined,
+  default_document: string,
+  cms_server_urls: string[],
+}
+
 //getStandalone [Main Entry Point] - Get CMS Page Data for Standalone Integration
 //Parameters:
 //  pathname: (string) Root relative path being requested
-//  content_path: (string) CMS content export folder
-//  content_url: (string) CMS content origin server
-//  default_document: (string) default document if not in url, e.g. 'index.html'
 //  searchParams: (object) Request url parameters
-//  cms_server_urls: Array(string) List of allowed urls for CMS editor servers.
+//  config: (object) Configuratoin parameters {
+//    content_path: (string) CMS content export folder
+//    content_url: (string) CMS content origin server
+//    default_document: (string) default document if not in url, e.g. 'index.html'
+//    cms_server_urls: Array(string) List of allowed urls for CMS editor servers.
+//  }
 //Returns (object) Page Object, with additional properties: isInEditor, editorContent, notFound
 //                 * if page is opened from CMS Editor or Not Found, an empty Page Object will be returned
 //Page Object {
@@ -255,17 +276,17 @@ export function getEditorScript(cms_server_url : string, cms_server_urls : strin
 //  editorScript (string), //If page was opened from a CMS Editor in config.cms_server_urls, the HTML script to launch the Editor
 //  notFound (bool)        //Whether the page was Not Found (page data will return empty)
 //}
-export async function getStandalone(pathname: string | string[] | undefined, content_path : string, content_url : string | undefined, default_document : string, searchParams: { [key: string]: string | string[] | undefined }, cms_server_urls : string[]) {
+export async function getStandalone(pathname: string | string[] | undefined, searchParams: { [key: string]: string | string[] | undefined }, config : standaloneConfig) {
 
   if (typeof(pathname) !== 'string') {
     if (searchParams.jshcms_token) pathname = '';
     else notFound(); // throws
   }
 
-  let cmsPage = await getPage(pathname, content_path, content_url, default_document);
+  let cmsPage = await getPage(pathname, config);
   if (searchParams && searchParams.jshcms_token && searchParams.jshcms_url) {
     const jshcms_url : string = (searchParams.jshcms_url || '').toString();
-    cmsPage.editorScript = getEditorScript(jshcms_url, cms_server_urls);
+    cmsPage.editorScript = getEditorScript(jshcms_url, config.cms_server_urls);
   }
   return cmsPage;
 }
