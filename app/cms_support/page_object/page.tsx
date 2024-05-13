@@ -1,4 +1,5 @@
 import { Metadata, ResolvingMetadata } from 'next'
+import { notFound } from 'next/navigation';
 import { Title } from '@tremor/react';
 import cms from '../../lib/cms';
 
@@ -20,6 +21,8 @@ export default async function TemplatePage({
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
   const cmsPage = await cms.getStandalone(searchParams.url, searchParams);
+
+  if (cmsPage.notFound) notFound();
 
   return (
     <>

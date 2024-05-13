@@ -43,6 +43,7 @@ export interface Page {
     title: string;
   };
   title: string;
+  notFound: boolean;
 }
 
 //getBlankPage - An empty Page object, for blank editors or initializing useState
@@ -66,7 +67,15 @@ export function getBlankPage(): Page {
     page_template_id: '',
     isInEditor: false,
     editorScript: undefined,
+    notFound: false,
   };
+}
+
+//getNotFoundPage - An empty Page object, with the notFound flag set
+export function getNotFoundPage(): Page {
+  const blank = getBlankPage();
+  blank.notFound = true;
+  return blank;
 }
 
 export interface getPageConfig {
@@ -105,7 +114,7 @@ export interface getPageConfig {
 //  page_template_id (string)
 //}
 export async function getPage(pathname : string | string[] | undefined, config : getPageConfig) : Promise<Page> {
-  if (typeof(pathname) !== 'string') return getBlankPage();
+  if (typeof(pathname) !== 'string') return getNotFoundPage();
   const variations = pathResolve(config.content_path, pathname, config.default_document);
   for (let i in variations) {
     const pathname = variations[i];
@@ -117,7 +126,7 @@ export async function getPage(pathname : string | string[] | undefined, config :
     }
   }
 
-  return getBlankPage();
+  return getNotFoundPage();
 }
 
 type Props = {
