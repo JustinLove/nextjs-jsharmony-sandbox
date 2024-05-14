@@ -1,4 +1,4 @@
-import { jsHarmonyCmsRouter } from './jsHarmonyCmsRouter';
+import { jsHarmonyCmsRouter } from 'jsharmony-cms-sdk-next';
 
 export default new (jsHarmonyCmsRouter as any)({
   content_path: process.env.CMS_CONTENT_PATH,
