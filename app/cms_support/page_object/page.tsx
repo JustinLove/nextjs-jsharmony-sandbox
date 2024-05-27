@@ -2,6 +2,7 @@ import { Metadata, ResolvingMetadata } from 'next'
 import { notFound } from 'next/navigation';
 import { Title } from '@tremor/react';
 import cms from '../../lib/cms';
+import { CmsStyleTag, CmsScriptTag, CmsHeadTag, CmsEditorTag, CmsContentArea, CmsFooterTag } from 'jsharmony-cms-sdk-next';
 
 type Props = {
   params: { id: string }
@@ -26,15 +27,21 @@ export default async function TemplatePage({
 
   return (
     <>
-      {cms.styleTag(cmsPage)}
-      {cms.scriptTag(cmsPage)}
-      {cms.headTag(cmsPage)}
-      {cms.editorTag(cmsPage)}
+      <CmsStyleTag page={cmsPage} />
+      <CmsScriptTag page={cmsPage} />
+      <CmsHeadTag page={cmsPage} />
+      <CmsEditorTag page={cmsPage} />
       <main className="p-4 md:p-10 mx-auto max-w-7xl">
         <Title cms-title="true">{cmsPage.title}</Title>
-        <div cms-content-editor="page.content.body" dangerouslySetInnerHTML={{ __html: cmsPage.content.body || ''}}></div>
+        <CmsContentArea cms-content="body" page={cmsPage}>
+          Default Body Content
+        </CmsContentArea>
+        <CmsContentArea cms-content="missing-with-default" page={cmsPage}>
+          Default Missing Content
+        </CmsContentArea>
+        <CmsContentArea cms-content="missing-with-no-default" page={cmsPage} />
       </main>
-      <div dangerouslySetInnerHTML={{ __html: cmsPage.footer || ''}}></div>
+      <CmsFooterTag page={cmsPage}/>
     </>
   );
 }

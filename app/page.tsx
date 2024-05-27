@@ -3,6 +3,7 @@ import { Card, Title, Text } from '@tremor/react';
 import Search from './search';
 import UsersTable from './table';
 import cms from './lib/cms';
+import { CmsEditorTag, CmsContentArea, CmsFooterTag } from 'jsharmony-cms-sdk-next';
 
 
 interface User {
@@ -29,15 +30,17 @@ export default async function IndexPage({
 
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
-      {cms.editorTag(cmsPage)}
-      <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
+      <CmsEditorTag page={cmsPage} />
+      <CmsContentArea cms-content="banner" page={cmsPage} />
       <Title cms-title="true">{cmsPage.title}</Title>
-      <div cms-content-editor="page.content.description" dangerouslySetInnerHTML={{ __html: cmsPage.content.description || 'A list of users retrieved from a Postgres database.'}}></div>
+      <CmsContentArea cms-content="description" page={cmsPage} >
+        A list of users retrieved from a Postgres database.
+      </CmsContentArea>
       <Search />
       <Card className="mt-6">
         <UsersTable users={users} />
       </Card>
-      <div cms-content-editor="page.content.footer" dangerouslySetInnerHTML={{ __html: cmsPage.content.footer || ''}}></div>
+      <CmsFooterTag page={cmsPage}/>
     </main>
   );
 }

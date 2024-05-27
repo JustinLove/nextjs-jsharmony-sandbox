@@ -3,6 +3,7 @@
 import { Card, Metric, Text, Title, BarList, Flex, Grid } from '@tremor/react';
 import Chart from './chart';
 import cms from '../lib/cms';
+import { CmsEditorTag, CmsContentArea, CmsFooterTag } from 'jsharmony-cms-sdk-next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -64,8 +65,8 @@ export default function PlaygroundPage() {
   useEffect(function() { getcms(); }, [pathname, useSearchParams]);
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">
-      {cms.editorTag(cmsPage)}
-      <div cms-content-editor="page.content.banner" dangerouslySetInnerHTML={{ __html: cmsPage.content.banner || ''}}></div>
+      <CmsEditorTag page={cmsPage} />
+      <CmsContentArea cms-content="banner" page={cmsPage} />
       <Grid numItemsSm={2} numItemsLg={3} className="gap-6">
         {data.map((item) => (
           <Card key={item.category}>
@@ -93,7 +94,7 @@ export default function PlaygroundPage() {
         ))}
       </Grid>
       <Chart />
-      <div cms-content-editor="page.content.footer" dangerouslySetInnerHTML={{ __html: cmsPage.content.footer || ''}}></div>
+      <CmsFooterTag page={cmsPage}/>
     </main>
   );
 }
