@@ -56,7 +56,7 @@ export default function PlaygroundPage() {
     "jshcms_url": searchParamsObject.get('jshcms_url') || undefined,
   };
   const pathname = usePathname();
-  const [cmsPage, setCmsPage] = useState(cms.getBlankPage());
+  const [cmsPage, setCmsPage] = useState(cms.getBlankPage(''));
 
   async function getcms() {
     const page = await cms.getStandalone(pathname + '/index.html', searchParams);

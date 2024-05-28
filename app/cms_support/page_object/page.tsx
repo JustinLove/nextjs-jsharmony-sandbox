@@ -1,8 +1,8 @@
 import { Metadata, ResolvingMetadata } from 'next'
 import { notFound } from 'next/navigation';
-import { Title } from '@tremor/react';
 import cms from '../../lib/cms';
-import { CmsStyleTag, CmsScriptTag, CmsHeadTag, CmsEditorTag, CmsContentArea, CmsFooterTag } from 'jsharmony-cms-sdk-next';
+import BasicPageTemplate from './BasicPageTemplate';
+import CardPageTemplate from './CardPageTemplate';
 
 type Props = {
   params: { id: string }
@@ -25,23 +25,9 @@ export default async function TemplatePage({
 
   if (cmsPage.notFound) notFound();
 
-  return (
-    <>
-      <CmsStyleTag page={cmsPage} />
-      <CmsScriptTag page={cmsPage} />
-      <CmsHeadTag page={cmsPage} />
-      <CmsEditorTag page={cmsPage} />
-      <main className="p-4 md:p-10 mx-auto max-w-7xl">
-        <Title cms-title="true">{cmsPage.title}</Title>
-        <CmsContentArea cms-content="body" page={cmsPage}>
-          Default Body Content
-        </CmsContentArea>
-        <CmsContentArea cms-content="missing-with-default" page={cmsPage}>
-          Default Missing Content
-        </CmsContentArea>
-        <CmsContentArea cms-content="missing-with-no-default" page={cmsPage} />
-      </main>
-      <CmsFooterTag page={cmsPage}/>
-    </>
-  );
+  if (cmsPage.page_template_id == 'Card Page Template') {
+    return <CardPageTemplate page={cmsPage} />;
+  } else {
+    return <BasicPageTemplate page={cmsPage} />;
+  }
 }
