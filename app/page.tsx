@@ -1,4 +1,3 @@
-import conn from './db';
 import { Card, Title, Text } from '@tremor/react';
 import Search from './search';
 import UsersTable from './table';
@@ -13,6 +12,15 @@ interface User {
   email: string;
 }
 
+const allUsers: User[] = [
+  {
+    id: 1,
+    name: 'Me',
+    username: 'username',
+    email: 'me@site.com',
+  },
+];
+
 export default async function IndexPage({
   searchParams
 }: {
@@ -20,13 +28,8 @@ export default async function IndexPage({
 }) {
   const cmsPage = await cms.getStandalone('/index.html', searchParams);
 
-  const search = searchParams.q ?? '';
-  const query = `
-    SELECT id, name, username, email 
-    FROM users 
-    WHERE name ILIKE $1::text;`;
-  const result = await conn.query(query, ['%' + search + '%']);
-  const users = result.rows as User[];
+  const search = (searchParams.q ?? '').toLowerCase();
+  const users = allUsers.filter(function(user) { return user.name.toLowerCase().indexOf(search) !== -1;});
 
   return (
     <main className="p-4 md:p-10 mx-auto max-w-7xl">

@@ -23,7 +23,6 @@
     "jsharmony-cms-sdk-next": "file:../jsharmony-cms-sdk-next/dist",
     "next": "14.0.0",
     "next-auth": "5.0.0-beta.3",
-    "pg": "^8.11.3",
     "postcss": "^8.4.31",
     "prettier": "^3.0.3",
     "prop-types": "^15.8.1",
